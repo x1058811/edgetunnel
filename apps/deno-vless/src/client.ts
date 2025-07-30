@@ -6,7 +6,7 @@ async function serveClient(req: Request, basePath: string) {
   // If the path is exactly the basePath (userID), serve index.html
   if (url.pathname === `/${basePath}`) {
     const resp = await serveDir(req, {
-      fsRoot: `${Deno.cwd()}/dist/apps/cf-page-vless`,
+      fsRoot: `${Deno.cwd()}/apps/cf-page-vless`,
       index: 'index.html',
     });
     resp.headers.set('cache-control', 'public, max-age=2592000');
@@ -15,7 +15,7 @@ async function serveClient(req: Request, basePath: string) {
   // If the path starts with /assets/ or /src/ or is a direct file from the cf-page-vless app's public folder
   else if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/src/') || url.pathname === '/favicon.ico' || url.pathname === '/401.html') {
     const resp = await serveDir(req, {
-      fsRoot: `${Deno.cwd()}/dist/apps/cf-page-vless`,
+      fsRoot: `${Deno.cwd()}/apps/cf-page-vless`,
     });
     resp.headers.set('cache-control', 'public, max-age=2592000');
     return resp;
