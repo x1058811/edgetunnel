@@ -1,28 +1,24 @@
+import { serveDir } from 'https://deno.land/std@0.170.0/http/file_server.ts';
+
 async function serveClient(req: Request, basePath: string) {
   const url = new URL(req.url);
-  let targetUrl: string;
-  let contentType: string;
 
   // If the path is exactly the basePath (userID), serve index.html
   if (url.pathname === `/${basePath}`) {
-    targetUrl = `https://raw.githubusercontent.com/x1058811/edgetunnel/main/apps/cf-page-vless/index.html`;
-    contentType = 'text/html; charset=utf-8';
+    const resp = await serveDir(req, {
+      fsRoot: `${Deno.cwd()}/dist/apps/cf-page-vless`,
+      index: 'index.html',
+    });
+    resp.headers.set('cache-control', 'public, max-age=2592000');
+    return resp;
   }
   // If the path starts with /assets/ or /src/ or is a direct file from the cf-page-vless app's public folder
   else if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/src/') || url.pathname === '/favicon.ico' || url.pathname === '/401.html') {
-    targetUrl = `https://raw.githubusercontent.com/x1058811/edgetunnel/main/apps/cf-page-vless${url.pathname}`;
-    if (url.pathname.endsWith('.js') || url.pathname.endsWith('.mjs') || url.pathname.endsWith('.ts') || url.pathname.endsWith('.tsx')) {
-      contentType = 'application/javascript';
-    } else if (url.pathname.endsWith('.css')) {
-      contentType = 'text/css';
-    } else if (url.pathname.endsWith('.html')) {
-      contentType = 'text/html; charset=utf-8';
-    } else if (url.pathname.endsWith('.ico')) {
-      contentType = 'image/x-icon';
-    } else {
-      // Default to a generic binary type or infer from fetch response
-      contentType = 'application/octet-stream';
-    }
+    const resp = await serveDir(req, {
+      fsRoot: `${Deno.cwd()}/dist/apps/cf-page-vless`,
+    });
+    resp.headers.set('cache-control', 'public, max-age=2592000');
+    return resp;
   }
   // Handle basic auth redirect
   else {
@@ -47,20 +43,6 @@ async function serveClient(req: Request, basePath: string) {
       });
     }
   }
-
-  console.log(`Fetching: ${targetUrl} with Content-Type: ${contentType}`);
-  const resp = await fetch(targetUrl);
-  const modifiedHeaders = new Headers(resp.headers);
-  modifiedHeaders.delete('content-security-policy');
-  modifiedHeaders.set('content-type', contentType); // Set the determined content type
-
-  return new Response(
-    resp.body,
-    {
-      status: resp.status,
-      headers: modifiedHeaders
-    }
-  );
 }
 
 export { serveClient };
